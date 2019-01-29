@@ -16,7 +16,13 @@ RUN export GNUPGHOME="$(mktemp -d)" \
 	&& rm -rf "$GNUPGHOME" /tmp/percona-release.rpm \
 	&& rpm --import /etc/pki/rpm-gpg/PERCONA-PACKAGING-KEY \
 	&& percona-release disable all \
-	&& percona-release enable ps-80 release
+	&& percona-release enable ps-80 release \
+	&& percona-release enable tools release
+
+#	&& rpmkeys --checksig /tmp/percona-release.rpm \
+#	&& curl -L -o /tmp/percona-release.rpm https://repo.percona.com/centos/7/RPMS/noarch/percona-release-1.0-7.noarch.rpm \
+#	&& curl -L -o /tmp/percona-release.rpm https://repo.percona.com/centos/7/RPMS/noarch/percona-release-0.1-8.noarch.rpm \
+
 
 # install exact version of PS for repeatability
 ENV PERCONA_VERSION 8.0.13-4.1.el7
@@ -25,7 +31,10 @@ RUN yum install -y \
 		percona-server-server-${PERCONA_VERSION} \
 		percona-server-tokudb-${PERCONA_VERSION} \
 		percona-server-rocksdb-${PERCONA_VERSION} \
+		percona-xtrabackup-80 \
 		which \
+		wget \
+		nc \
 		policycoreutils \
 		https://repo.percona.com/percona/yum/release/7/RPMS/x86_64/jemalloc-3.6.0-1.el7.x86_64.rpm \
 	&& yum clean all \
@@ -54,5 +63,6 @@ COPY ps-entry.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 USER mysql
+# USER root
 EXPOSE 3306 33060
 CMD ["mysqld"]
