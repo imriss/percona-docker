@@ -1,8 +1,9 @@
 FROM centos:7
-MAINTAINER Percona Development <info@percona.com>
+# MAINTAINER Percona Development <info@percona.com>
+MAINTAINER Reza Farrahi <reza.farrahi@nakisa.com>
 
-RUN groupadd -g 1001 mysql
-RUN useradd -u 1001 -r -g 1001 -s /sbin/nologin \
+# RUN groupadd -g 999 mysql
+RUN useradd -u 999 -r -g 999 -s /sbin/nologin \
 		-c "Default Application User" mysql
 
 # check repository package signature in secure way
@@ -22,7 +23,6 @@ RUN export GNUPGHOME="$(mktemp -d)" \
 #	&& rpmkeys --checksig /tmp/percona-release.rpm \
 #	&& curl -L -o /tmp/percona-release.rpm https://repo.percona.com/centos/7/RPMS/noarch/percona-release-1.0-7.noarch.rpm \
 #	&& curl -L -o /tmp/percona-release.rpm https://repo.percona.com/centos/7/RPMS/noarch/percona-release-0.1-8.noarch.rpm \
-
 
 # install exact version of PS for repeatability
 ENV PERCONA_VERSION 8.0.13-4.1.el7
