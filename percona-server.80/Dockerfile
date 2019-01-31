@@ -3,7 +3,7 @@ FROM centos:7
 MAINTAINER Reza Farrahi <reza.farrahi@nakisa.com>
 
 # RUN groupadd -g 999 mysql
-RUN useradd -u 999 -r -g 999 -s /sbin/nologin \
+RUN useradd -u 999 -r -g root -s /sbin/nologin \
 		-c "Default Application User" mysql
 
 # check repository package signature in secure way
