@@ -2,9 +2,12 @@ FROM centos:7
 # MAINTAINER Percona Development <info@percona.com>
 MAINTAINER Reza Farrahi <reza.farrahi@nakisa.com>
 
-# RUN groupadd -g 999 mysql
-RUN useradd -u 999 -r -g root -s /sbin/nologin \
-		-c "Default Application User" mysql
+#
+RUN groupadd -g 5341 -r mysql
+RUN useradd -m -s /sbin/nologin -u 999 -g mysql -c "Default Application User" mysql
+COPY permission_fix /usr/local/bin/
+RUN chmod 755 /usr/local/bin/permission_fix
+RUN permission_fix
 
 # check repository package signature in secure way
 RUN export GNUPGHOME="$(mktemp -d)" \
@@ -41,7 +44,7 @@ RUN yum install -y \
 	&& rm -rf /var/cache/yum /var/lib/mysql
 
 # purge and re-create /var/lib/mysql with appropriate ownership
-RUN /usr/bin/install -m 0775 -o mysql -g root -d /var/lib/mysql /var/run/mysqld /docker-entrypoint-initdb.d \
+RUN /usr/bin/install -m 0775 -o mysql -g mysql -d /var/lib/mysql /var/run/mysqld /docker-entrypoint-initdb.d \
 # comment out a few problematic configuration values
 	&& find /etc/my.cnf /etc/my.cnf.d -name '*.cnf' -print0 \
 		| xargs -0 grep -lZE '^(bind-address|log|user)' \
@@ -50,18 +53,25 @@ RUN /usr/bin/install -m 0775 -o mysql -g root -d /var/lib/mysql /var/run/mysqld 
 	&& echo '!includedir /etc/my.cnf.d' >> /etc/my.cnf \
 	&& printf '[mysqld]\nskip-host-cache\nskip-name-resolve\n' > /etc/my.cnf.d/docker.cnf \
 # TokuDB modifications
-	&& /usr/bin/install -m 0664 -o mysql -g root /dev/null /etc/sysconfig/mysql \
+	&& /usr/bin/install -m 0664 -o mysql -g mysql /dev/null /etc/sysconfig/mysql \
 	&& echo "LD_PRELOAD=/usr/lib64/libjemalloc.so.1" >> /etc/sysconfig/mysql \
 	&& echo "THP_SETTING=never" >> /etc/sysconfig/mysql \
 # allow to change config files
-	&& chown -R mysql:root /etc/my.cnf /etc/my.cnf.d \
+	&& chown -R mysql:mysql /etc/my.cnf /etc/my.cnf.d \
 	&& chmod -R ug+rwX /etc/my.cnf /etc/my.cnf.d
 
+#
 VOLUME ["/var/lib/mysql", "/var/log/mysql"]
 
+#
+RUN chown -R mysql:mysql /var/lib/mysql \
+	&& chmod -R ug+rwX /var/lib/mysql
+
+#
 COPY ps-entry.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
+#
 USER mysql
 # USER root
 EXPOSE 3306 33060
